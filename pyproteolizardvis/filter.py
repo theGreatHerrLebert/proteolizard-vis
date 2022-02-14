@@ -1,4 +1,5 @@
 import abc
+from ipywidgets import widgets
 
 
 class MassSpecDataFilter(abc.ABC):
@@ -6,7 +7,6 @@ class MassSpecDataFilter(abc.ABC):
         self.data_loader = data_loader
         self.filtered_data = filtered_data
         self.__create_widgets()
-        self.display_widgets()
 
     def __create_widgets(self):
 
