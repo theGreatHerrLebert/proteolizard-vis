@@ -5,7 +5,7 @@ from abc import ABC
 import hdbscan
 
 from sklearn.metrics import pairwise
-from pyproteolizard.algorithms.clustering import cluster_precursors_hdbscan
+from pyproteolizard.clustering import cluster_precursors_hdbscan
 
 import plotly.graph_objects as go
 import plotly.express as px
