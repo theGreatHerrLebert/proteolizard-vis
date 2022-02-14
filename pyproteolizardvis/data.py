@@ -1,6 +1,5 @@
 import abc
 
-from pyproteolizard.midia import MidiaExperiment, MidiaCursor
 from ipywidgets import widgets
 
 
