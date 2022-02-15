@@ -47,13 +47,13 @@ class ClusterVisualizer(abc.ABC):
                                                 'zaxis': {'title': 'Z', 'dtick': 1}}, template="plotly_white")
 
         #### ---- VANILLA SCALING --- ####
-        self.cycle_scaling = widgets.FloatSlider(value=-0.4, min=-2, max=2, step=0.1, description='cycle scaling',
+        self.cycle_scaling = widgets.FloatSlider(value=-0.2, min=-2, max=2, step=0.1, description='cycle scaling',
                                                  continuous_update=False)
 
         self.scan_scaling = widgets.FloatSlider(value=0.4, min=-2, max=2, step=0.1, description='scan scaling',
                                                 continuous_update=False)
 
-        self.resolution = widgets.IntSlider(value=50_000, min=5000,
+        self.resolution = widgets.IntSlider(value=70_000, min=5000,
                                             max=150_000, step=100, description='resolution:', continuous_update=False)
 
         self.scaling_controls = widgets.HBox(children=[self.cycle_scaling, self.scan_scaling])
@@ -254,13 +254,13 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
             value=40, min=1, max=100, step=1, description='leaf size:', continuous_update=False)
 
         self.min_cluster_size = widgets.IntSlider(
-            value=7, min=1, max=100, step=1, description='min cluster size:', continuous_update=False)
+            value=13, min=1, max=100, step=1, description='min cluster size:', continuous_update=False)
 
         self.min_samples = widgets.IntSlider(
-            value=7, min=1, max=50, step=1, description='min samples:', continuous_update=False)
+            value=1, min=1, max=50, step=1, description='min samples:', continuous_update=False)
 
         self.metric = widgets.Dropdown(
-            options=list(hdbscan.dist_metrics.METRIC_MAPPING.keys()), value='euclidean', description='Metric:',
+            options=list(hdbscan.dist_metrics.METRIC_MAPPING.keys()), value='manhattan', description='Metric:',
             disabled=False)
 
         self.cluster_controls_1 = widgets.HBox(

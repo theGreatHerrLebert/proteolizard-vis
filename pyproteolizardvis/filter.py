@@ -16,7 +16,7 @@ class MassSpecDataFilter(abc.ABC):
         self.mz_max = widgets.BoundedFloatText(value=510.0, min=1.0, max=2500.0, step=.1, description='m/z max:',
                                                disabled=False)
         # intensity controls
-        self.intensity_min = widgets.IntSlider(value=150, min=0, max=1000, step=10, description='Min intensity:',
+        self.intensity_min = widgets.IntSlider(value=20, min=0, max=1000, step=10, description='Min intensity:',
                                                continuous_update=False)
 
         # filter button
