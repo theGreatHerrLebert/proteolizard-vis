@@ -11,8 +11,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 from ipywidgets import widgets
-from plotly.subplots import make_subplots
-from proteolizardvis.utility import calculate_statistics, get_initial_histogram
+from pyproteolizardvis.utility import calculate_statistics, get_initial_histogram, get_discrete_color_swatches
 
 
 class ClusterVisualizer(abc.ABC):
