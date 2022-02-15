@@ -43,4 +43,8 @@ class MassSpecDataFilter(abc.ABC):
         """
         pass
 
-
+    @abc.abstractmethod
+    def get_filter_settings(self):
+        """
+        """
+        pass

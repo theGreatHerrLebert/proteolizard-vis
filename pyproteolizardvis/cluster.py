@@ -4,8 +4,10 @@ from abc import ABC
 
 import hdbscan
 
+from datetime import  datetime
+
 from sklearn.metrics import pairwise
-from pyproteolizard.clustering import cluster_precursors_hdbscan
+from pyproteolizard.clustering import cluster_precursors_hdbscan, cluster_precursors_dbscan
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -158,7 +160,7 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
 
     def on_save_clicked(self, change):
         general_settings = self.get_general_settings()
-        filter_settings = self.data.get_precursor_filter_settings()
+        filter_settings = self.data.get_filter_settings()
         dbscan_settings = {'epsilon': self.epsilon.value,
                            'metric': self.metric.value,
                            'min_samples': self.min_samples.value,
@@ -279,18 +281,31 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
 
     def on_save_clicked(self, change):
         general_settings = self.get_general_settings()
-        filter_settings = self.data.get_precursor_filter_settings()
-        hdbscan_settings = {'epsilon': self.epsilon.value,
+        filter_settings = self.data.get_filter_settings()
+
+        hdbscan_settings = {'algorithm': self.algorithm.value,
+                            'alpha': self.alpha.value,
+                            'approx-min-span-tree': self.approx_min_span_tree.value,
+                            'gen-min-span-tree': self.gen_min_span_tree.value,
+                            'leaf-size': self.leaf_size.value,
+                            'min-cluster-size': self.min_cluster_size.value,
+                            'min-samples': self.min_samples.value,
                             'metric': self.metric.value,
-                            'min_samples': self.min_samples.value,
-                            'level': 'MS-I',
-                            'algorithm': 'DBSCAN'}
+                            'cycle-scaling': self.cycle_scaling.value,
+                            'scan-scaling': self.scan_scaling.value,
+                            'resolution': self.resolution.value}
 
         g = dict(filter_settings, **general_settings)
         g = dict(g, **hdbscan_settings)
         table = pd.DataFrame(g, index=[0])
-        print(table)
-        print("save implememtation still pending.")
+
+        try:
+            now = datetime.now()
+            current_time = now.strftime("%d-%m-%y-%H-%M-%S")
+            table.to_csv(f'PRECURSOR-HDBSCAN-{current_time}.csv', index=False)
+
+        except Exception as e:
+            print(e)
 
     def on_cluster_clicked(self, change):
         try:
@@ -356,4 +371,3 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
             fig.data[1].x = summary_table['scan'].apply(lambda x: len(np.unique(x)))
             fig.data[2].x = summary_table['mz'].apply(lambda x: len(np.unique(x)))
             fig.data[3].x = summary_table['scan'].count()
-
