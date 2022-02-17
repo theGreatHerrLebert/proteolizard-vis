@@ -237,6 +237,10 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
         super().__init__(data)
 
         ########## ------------------- ##########
+        self.person = widgets.Text(placeholder='MyName',
+                               description='Person:',
+                               layout=widgets.Layout(height="auto", width="auto"))
+
         self.algorithm = widgets.Dropdown(
             options=['best'], value='best', description='algorithm:', disabled=False)
 
@@ -272,7 +276,7 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
         self.cluster_controls_2 = widgets.HBox(
             children=[self.alpha, self.leaf_size, self.min_cluster_size, self.min_samples])
 
-        self.cluster_settings = widgets.VBox(children=[self.cluster_controls_1, self.cluster_controls_2])
+        self.cluster_settings = widgets.VBox(children=[self.person, self.cluster_controls_1, self.cluster_controls_2])
 
         self.box.children = tuple(list(self.box.children)[:1] + [self.cluster_settings] + list(self.box.children)[1:])
 
@@ -286,7 +290,9 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
         general_settings = self.get_general_settings()
         filter_settings = self.data.get_filter_settings()
 
-        hdbscan_settings = {'algorithm': self.algorithm.value,
+        hdbscan_settings = {
+            'person': self.person.value,
+            'algorithm': self.algorithm.value,
                             'alpha': self.alpha.value,
                             'approx-min-span-tree': self.approx_min_span_tree.value,
                             'gen-min-span-tree': self.gen_min_span_tree.value,
