@@ -4,7 +4,7 @@ from abc import ABC
 
 import hdbscan
 
-from datetime import  datetime
+from datetime import datetime
 
 from sklearn.metrics import pairwise
 from pyproteolizard.clustering import cluster_precursors_hdbscan, cluster_precursors_dbscan
@@ -53,10 +53,13 @@ class ClusterVisualizer(abc.ABC):
         self.scan_scaling = widgets.FloatSlider(value=0.4, min=-2, max=2, step=0.1, description='scan scaling',
                                                 continuous_update=False)
 
+        self.mz_scaling = widgets.FloatSlider(value=0.0, min=-5, max=5, step=0.1, description='mz scaling',
+                                              continuous_update=False)
+
         self.resolution = widgets.IntSlider(value=70_000, min=5000,
                                             max=150_000, step=100, description='resolution:', continuous_update=False)
 
-        self.scaling_controls = widgets.HBox(children=[self.cycle_scaling, self.scan_scaling])
+        self.scaling_controls = widgets.HBox(children=[self.cycle_scaling, self.scan_scaling, self.mz_scaling])
         self.cluster_settings = widgets.HBox()
         self.filter_noise = widgets.Checkbox(value=False, description='Remove noise', disabled=False, indent=False)
 
@@ -326,7 +329,8 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
                                                     metric=self.metric.value,
                                                     cycle_scaling=self.cycle_scaling.value,
                                                     scan_scaling=self.scan_scaling.value,
-                                                    resolution=self.resolution.value)
+                                                    resolution=self.resolution.value,
+                                                    mz_scaling=self.mz_scaling.value)
 
         self.clusters = clustered_data
         self.noise = self.clusters[self.clusters.label == -1]
