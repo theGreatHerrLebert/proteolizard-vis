@@ -13,7 +13,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 from ipywidgets import widgets
-from pyproteolizardvis.utility import calculate_statistics, get_initial_histogram, get_discrete_color_swatches
+from pyproteolizardvis.utility import calculate_statistics, get_initial_histogram, get_discrete_color_swatches, \
+    calculate_mz_tick_spacing
 
 
 class ClusterVisualizer(abc.ABC):
@@ -369,10 +370,12 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
                    for l in clustered_data.label.values], opacity=0.8,
             line=dict(width=0))
 
+        tick_spacing = calculate_mz_tick_spacing(np.min(clustered_data.mz), np.max(clustered_data.mz))
+
         self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0), scene={'xaxis': {'title': 'Cycle'},
                                                                                  'yaxis': {'title': 'Scan'},
                                                                                  'zaxis': {'title': 'mz',
-                                                                                           'dtick': 0.8}},
+                                                                                           'dtick': tick_spacing}},
                                          template="plotly_white")
 
     def __update_summary_subplots(self, fig, summary_table):
