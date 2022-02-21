@@ -1,9 +1,12 @@
-import abc
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 from plotly.subplots import make_subplots
+
+
+def calculate_mz_tick_spacing(mz_min, mz_max, num_ticks=10):
+    return np.round((mz_max - mz_min) / num_ticks, 1)
 
 
 def calculate_statistics(clusters, noise):
