@@ -185,7 +185,7 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
 
     def update_widget(self):
 
-        clustered_data = cluster_precursors_dbscan(self.data.get_data(),
+        clustered_data = cluster_precursors_dbscan(self.data,
                                                    epsilon=self.epsilon.value,
                                                    min_samples=self.min_samples.value,
                                                    metric=self.metric.value,
@@ -325,7 +325,7 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
 
     def update_widget(self):
 
-        clustered_data = cluster_precursors_hdbscan(self.data.get_data(),
+        clustered_data = cluster_precursors_hdbscan(self.data,
                                                     algorithm=self.algorithm.value,
                                                     alpha=self.alpha.value,
                                                     approx_min_span_tree=self.approx_min_span_tree.value,
