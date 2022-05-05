@@ -9,7 +9,8 @@ class DataLoader(abc.ABC):
         self.__create_widgets()
 
     def __create_widgets(self):
-        self.dp = widgets.Text(placeholder='path/to/experiment.d',
+        self.dp = widgets.Text(value="../../../data/midia_nf/midia.d",
+                               placeholder='path/to/experiment.d',
                                description='Data path',
                                layout=widgets.Layout(height="auto", width="auto"))
 
