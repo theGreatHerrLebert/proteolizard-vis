@@ -16,7 +16,7 @@ setup(
     long_description=ld,
     long_description_content_type="text/markdown",
     install_requires=[
-        "pyproteolizard >= 0.1",
+        "proteolizarddata >= 0.1",
         "pandas >=1.1",
         "hdbscan",
         "pandas",
