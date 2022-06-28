@@ -325,7 +325,7 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
 
     def update_widget(self):
 
-        clustered_data = cluster_precursors_hdbscan(self.data,
+        clustered_data = cluster_precursors_hdbscan(self.data.filtered_data.get_precursor_coords3D().get_points(),
                                                     algorithm=self.algorithm.value,
                                                     alpha=self.alpha.value,
                                                     approx_min_span_tree=self.approx_min_span_tree.value,
