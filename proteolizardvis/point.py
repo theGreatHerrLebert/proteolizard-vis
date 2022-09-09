@@ -3,6 +3,7 @@ from ipywidgets import widgets
 import numpy as np
 import abc
 import plotly.express as px
+from proteolizardvis.utility import calculate_mz_tick_spacing
 
 
 class ImsPointCloudVisualizer(abc.ABC):
@@ -54,3 +55,39 @@ class ImsPointCloudVisualizer(abc.ABC):
         """
         """
         pass
+
+
+class DDAPrecursorPointCloudVis(ImsPointCloudVisualizer, abc.ABC):
+    def __init__(self, data):
+        super().__init__(data)
+        self.opacity_slider.value = 0.3
+        self.point_size_slider.value = 0.5
+
+    def on_update_clicked(self, change):
+
+        points = self.data.filtered_data.get_precursor_points().values
+        f = np.sort(np.unique(points[:, 0]))
+        f_idx = dict(np.c_[f, np.arange(f.shape[0])])
+
+        self.points_widget.data[0].x = [f_idx[x] for x in points[:, 0]]
+        self.points_widget.data[0].y = points[:, 2]
+        self.points_widget.data[0].z = points[:, 3]
+        self.points_widget.data[0].marker = dict(size=self.point_size_slider.value,
+                                                 color=np.log(points[:, 4]),
+                                                 colorscale=self.color_scale.value,
+                                                 line=dict(width=0),
+                                                 opacity=self.opacity_slider.value)
+
+        tick_spacing = calculate_mz_tick_spacing(np.min(points[:, 3]), np.max(points[:, 3]))
+
+        self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0),
+                                         scene={'xaxis': {'title': 'Rt-Index'},
+                                                'yaxis': {'title': 'Mobility-Index'},
+                                                'zaxis': {'title': 'm/z', 'dtick': tick_spacing}},
+                                         template="plotly_white")
+
+    def display_widgets(self):
+        try:
+            display(self.box)
+        except Exception as e:
+            print(e)
