@@ -22,11 +22,11 @@ class TimsSurfaceVisualizer:
                                             value='mz', description='Exclude:')
 
         self.color_scale = widgets.Dropdown(options=sorted(px.colors.named_colorscales()),
-                                            value='inferno', description='color scale:')
+                                            value='viridis', description='color scale:')
 
         self.controls = widgets.HBox(children=[self.resolution, self.normalization, self.exclude_dim, self.color_scale])
 
-        self.surface = go.FigureWidget(data=[go.Surface(z=np.array([[0.0]]), colorscale='inferno')])
+        self.surface = go.FigureWidget(data=[go.Surface(z=np.array([[0.0]]), colorscale='viridis')])
 
         self.surface.update_layout(title='', autosize=True, width=800, height=800, template='simple_white')
 
@@ -64,11 +64,32 @@ class TimsSurfaceVisualizer:
 
         self.surface.data[0].colorscale = self.color_scale.value
 
+        def get_axis_name(target='x', exclude_dim='mz'):
+
+            if exclude_dim == 'mz':
+                if target == 'x':
+                    return 'Ion mobility [1/K0]'
+                else:
+                    return 'Retention time [minutes]'
+
+            if exclude_dim == 'scan':
+                if target == 'x':
+                    return 'm/z [Da]'
+                else:
+                    return 'Retention time [minutes]'
+
+            if exclude_dim == 'retention time':
+                if target == 'x':
+                    return 'm/z [Da]'
+                else:
+                    return 'Ion mobility [1/K0]'
+
+            return 'UNKNOWN'
+
         self.surface.update_layout(
-            scene = dict(xaxis_title='Ion mobility [1/K0]',
+            scene = dict(xaxis_title=get_axis_name(target='x', exclude_dim=self.exclude_dim.value),
                          # xaxis = dict(tickvals=r_dt, ticktext=t_dt),
-                         yaxis_title='Retention time [minutes]',
+                         yaxis_title=get_axis_name(target='y', exclude_dim=self.exclude_dim.value),
                          # yaxis = dict(tickvals=r_rt, ticktext=t_rt),
                          zaxis_title='Intensity',
-                         zaxis = dict())
-        )
+                         zaxis=dict()))
