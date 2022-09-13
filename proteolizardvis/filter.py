@@ -90,6 +90,7 @@ class DDAPrecursorFilter(MassSpecDataFilter, abc.ABC):
 
 
 class DDAFragmentFilter(MassSpecDataFilter, abc.ABC):
+
     def __init__(self, data_loader, filtered_data=None):
         self.filtered_data = filtered_data
         super().__init__(data_loader)

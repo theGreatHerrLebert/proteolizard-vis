@@ -51,7 +51,7 @@ class DataLoader(abc.ABC):
         pass
 
 
-class DDADataLoader(DataLoader, abc.ABC):
+class DDADataLoader(DataLoader):
 
     def __init__(self):
         super().__init__()
@@ -78,6 +78,8 @@ class DDADataLoader(DataLoader, abc.ABC):
     def __on_open_clicked(self, chage):
         try:
             self.cursor = PyTimsDataHandleDDA(self.dp.value)
+            self.rt_start.max = self.cursor.meta_data.Time.values[-1] / 60
+            self.rt_stop.max = self.cursor.meta_data.Time.values[-1] / 60
             self.f_idx = dict(np.c_[self.cursor.precursor_frames, np.arange(len(self.cursor.precursor_frames))])
             tic_data = self.cursor.meta_data[self.cursor.meta_data.MsMsType == 0].SummedIntensities.values
 
@@ -85,8 +87,8 @@ class DDADataLoader(DataLoader, abc.ABC):
             self.tic.data[0].y = tic_data / np.max(tic_data)
 
             vals, text = self.__get_vals_and_text(len(self.cursor.precursor_frames),
-                                                  rt_start=0,
-                                                  rt_stop=self.cursor.meta_data.Time.values[-1], num_ticks_rt=20)
+                                                  rt_start=self.cursor.meta_data.Time.values[0],
+                                                  rt_stop=self.cursor.meta_data.Time.values[-1], num_ticks_rt=25)
 
             self.tic.update_layout(title=f'Total Intensity Count',
                                    xaxis_title='Time [Minutes]',
@@ -139,10 +141,17 @@ class DDADataLoader(DataLoader, abc.ABC):
             try:
                 prec_ids = self.cursor.rt_range_to_precursor_frame_ids(self.rt_start.value * 60,
                                                                        self.rt_stop.value * 60)
+
+                num_indices = len(list(self.f_idx.values()))
+                binning = np.linspace(0, self.rt_stop.max, num_indices)
+
+                x_start = np.argmin(np.abs(self.rt_start.value - binning))
+                x_stop = np.argmin(np.abs(self.rt_stop.value - binning))
+
                 self.tic.layout['shapes'] = ()
                 self.tic.add_vrect(
-                    x0=self.f_idx[prec_ids[0]],
-                    x1=self.f_idx[prec_ids[-1]],
+                    x0=x_start,
+                    x1=x_stop if x_start <= x_stop else x_start,
                     line_width=1, fillcolor="green", opacity=0.3)
 
             except Exception as e:

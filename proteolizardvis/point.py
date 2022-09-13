@@ -91,3 +91,40 @@ class DDAPrecursorPointCloudVis(ImsPointCloudVisualizer, abc.ABC):
             display(self.box)
         except Exception as e:
             print(e)
+
+
+class DDAPrecursorPointCloudVis(ImsPointCloudVisualizer, abc.ABC):
+    def __init__(self, data):
+        super().__init__(data)
+        self.opacity_slider.value = 0.3
+        self.point_size_slider.value = 0.5
+
+    def on_update_clicked(self, change):
+
+        points = self.data.filtered_data.get_precursor_points()
+        f = np.sort(np.unique(np.copy(points.frame.values)))
+        f_idx = dict(np.c_[f, np.arange(f.shape[0])])
+        rt_indices = [f_idx[x] for x in points.frame.values]
+
+        self.points_widget.data[0].x = rt_indices
+        self.points_widget.data[0].y = points.scan.values
+        self.points_widget.data[0].z = points.mz.values
+        self.points_widget.data[0].marker = dict(size=self.point_size_slider.value,
+                                                 color=np.log(points.intensity.values + 0.0001),
+                                                 colorscale=self.color_scale.value,
+                                                 line=dict(width=0),
+                                                 opacity=self.opacity_slider.value)
+
+        tick_spacing = calculate_mz_tick_spacing(np.min(points.mz.values), np.max(points.mz.values))
+
+        self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0),
+                                         scene={'xaxis': {'title': 'Rt-Index'},
+                                                'yaxis': {'title': 'Mobility-Index'},
+                                                'zaxis': {'title': 'm/z', 'dtick': tick_spacing}},
+                                         template="plotly_white")
+
+    def display_widgets(self):
+        try:
+            display(self.box)
+        except Exception as e:
+            print(e)

@@ -8,6 +8,7 @@ from datetime import datetime
 
 from sklearn.metrics import pairwise
 from proteolizardalgo.clustering import cluster_precursors_hdbscan, cluster_precursors_dbscan
+from proteolizardalgo.hashing import TimsHasher
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -16,11 +17,10 @@ from ipywidgets import widgets
 from proteolizardvis.utility import calculate_statistics, get_initial_histogram, get_discrete_color_swatches, \
     calculate_mz_tick_spacing
 
+from proteolizarddata.data import TimsFrame, TimsSlice
+
 
 class ClusterVisualizer(abc.ABC):
-    """
-
-    """
 
     def __init__(self, data, clusters=None, noise=None):
         """
@@ -71,9 +71,6 @@ class ClusterVisualizer(abc.ABC):
         self.save_button = widgets.Button(description='Save settings')
         self.save_button.on_click(self.on_save_clicked)
 
-        self.score = widgets.Dropdown(options=['★', '★★', '★★★', '★★★★', '★★★★★'], value='★★★★★',
-                                      description='Score', disabled=False)
-
         self.cluster_colors = widgets.Dropdown(options=get_discrete_color_swatches(), value='Alphabet',
                                                description='Cluster colors',
                                                disabled=False)
@@ -97,7 +94,7 @@ class ClusterVisualizer(abc.ABC):
         self.box = widgets.VBox(children=[self.cluster_settings,
                                           self.filter_settings,
                                           self.scaling_controls,
-                                          widgets.HBox(children=[self.cluster_button, self.score,
+                                          widgets.HBox(children=[self.cluster_button,
                                                                  self.save_button, self.cluster_colors]),
                                           widgets.HBox(children=[self.points_widget, self.summary_box])])
 
@@ -128,15 +125,13 @@ class ClusterVisualizer(abc.ABC):
     def get_general_settings(self):
         """
         """
-
-        score_to_int = {'★': 1, '★★': 2, '★★★': 3, '★★★★': 4, '★★★★★': 5}
         return {'resolution': self.resolution.value,
                 'cylce-scale': self.cycle_scaling.value,
                 'scan-scale': self.scan_scaling.value,
                 'score': score_to_int[self.score.value]}
 
 
-class DBSCANVisualizer(ClusterVisualizer, ABC):
+class DBSCANVisualizer(ClusterVisualizer, abc.ABC):
 
     def __init__(self, data):
         super().__init__(data)
@@ -162,6 +157,12 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
         except Exception as e:
             print(e)
 
+    def on_cluster_clicked(self, change):
+        try:
+            self.update_widget()
+        except Exception as e:
+            print(e)
+
     def on_save_clicked(self, change):
         general_settings = self.get_general_settings()
         filter_settings = self.data.get_filter_settings()
@@ -177,15 +178,9 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
         print(table)
         print("save implememtation still pending.")
 
-    def on_cluster_clicked(self, change):
-        try:
-            self.update_widget()
-        except Exception as e:
-            print(e)
-
     def update_widget(self):
 
-        clustered_data = cluster_precursors_dbscan(self.data,
+        clustered_data = cluster_precursors_dbscan(self.data.filtered_data.get_precursor_points(),
                                                    epsilon=self.epsilon.value,
                                                    min_samples=self.min_samples.value,
                                                    metric=self.metric.value,
@@ -207,6 +202,8 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
 
         color_dict = dict(list(enumerate(getattr(px.colors.qualitative, self.cluster_colors.value))))
 
+        tick_spacing = calculate_mz_tick_spacing(np.min(clustered_data.mz), np.max(clustered_data.mz))
+
         if self.filter_noise.value:
             clustered_data = clustered_data[clustered_data.label != -1]
 
@@ -221,7 +218,7 @@ class DBSCANVisualizer(ClusterVisualizer, ABC):
         self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0), scene={'xaxis': {'title': 'Cycle'},
                                                                                  'yaxis': {'title': 'Scan'},
                                                                                  'zaxis': {'title': 'mz',
-                                                                                           'dtick': 0.8}},
+                                                                                           'dtick': tick_spacing}},
                                          template="plotly_white")
 
     def __update_summary_subplots(self, fig, summary_table):
@@ -384,3 +381,105 @@ class HDBSCANVisualizer(ClusterVisualizer, ABC):
             fig.data[1].x = summary_table['scan'].apply(lambda x: len(np.unique(x)))
             fig.data[2].x = summary_table['mz'].apply(lambda x: len(np.unique(x)))
             fig.data[3].x = summary_table['scan'].count()
+
+
+class TimsHasherVisualizer:
+    def __init__(self, data_loader):
+        self.data_loader = data_loader
+        self.hashed_data = None
+        self.__create_widgets()
+
+    def __create_widgets(self):
+        self.num_trials = widgets.IntSlider(value=32, min=1, max=128, description='number trials')
+        self.len_single_trial = widgets.IntSlider(value=20, min=1, max=64, description='length trial')
+        self.hash_button = widgets.Button(description='Hash slice')
+        self.hash_button.on_click(self.on_hash_clicked)
+
+        self.resolution = widgets.IntSlider(value=1, min=0, max=4, description='resolution')
+        self.len_window = widgets.IntSlider(value=10, min=3, max=100, description='length mz')
+
+        self.__create_point_widget()
+
+        self.hasher_settings_1 = widgets.HBox(children=[self.num_trials, self.len_single_trial,
+                                                        self.hash_button])
+        self.hasher_settings_2 = widgets.HBox(children=[self.resolution, self.len_window])
+
+        self.controls = widgets.VBox(children=[self.hasher_settings_1, self.hasher_settings_2,
+                                               self.point_box])
+
+    def display_widgets(self):
+        try:
+            display(self.controls)
+
+        except Exception as e:
+            print(e)
+
+    def __create_point_widget(self):
+        points = np.array([[1.0, 1.0, 1.0, 1.0]])
+        point_cloud = go.Scatter3d(
+            x=points[:, 0],
+            y=points[:, 1],
+            z=points[:, 2],
+            mode='markers',
+            marker=dict(size=5, color=np.log(points[:, 3]), colorscale='geyser', opacity=1))
+
+        self.points_widget = go.FigureWidget(data=[point_cloud])
+        self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0),
+                                         scene={'xaxis': {'title': 'X'},
+                                                'yaxis': {'title': 'Y'},
+                                                'zaxis': {'title': 'Z', 'dtick': 1}},
+                                         template="plotly_white")
+
+        self.opacity_slider = widgets.FloatSlider(value=0.3, min=0.1, max=1, step=0.1, description='opacity:',
+                                                  continuous_update=False)
+
+        self.point_size_slider = widgets.FloatSlider(value=0.5, min=0.1, max=5.0, step=0.1, description='point size:',
+                                                     continuous_update=False)
+
+        self.color_scale = widgets.Dropdown(options=sorted(px.colors.named_colorscales()),
+                                            value='geyser', description='color scale:', disabled=False)
+
+        self.point_controls = widgets.HBox(children=[self.opacity_slider, self.point_size_slider, self.color_scale])
+
+        self.update_button = widgets.Button(description='Update')
+        self.update_button.on_click(self.on_update_clicked)
+
+        self.point_box = widgets.VBox \
+            (children=[self.point_controls, self.update_button, self.points_widget])
+
+    def on_hash_clicked(self, change):
+        precursor_frames = self.data_loader.filtered_data.get_precursor_frames()
+
+        hasher = TimsHasher(trials=self.num_trials.value, len_trial=self.len_single_trial.value,
+                            resolution=self.resolution.value, num_dalton=self.len_window.value)
+
+        hashed_precs = []
+        for frame in precursor_frames:
+            try:
+                hashed_precs.append(hasher(frame))
+            except:
+                pass
+
+        self.hashed_data = TimsSlice(None, [f.frame_ptr for f in hashed_precs], [])
+
+    def on_update_clicked(self, change):
+        points = self.hashed_data.get_precursor_points().values
+        f = np.sort(np.unique(points[:, 0]))
+        f_idx = dict(np.c_[f, np.arange(f.shape[0])])
+
+        self.points_widget.data[0].x = [f_idx[x] for x in points[:, 0]]
+        self.points_widget.data[0].y = points[:, 1]
+        self.points_widget.data[0].z = points[:, 3]
+        self.points_widget.data[0].marker = dict(size=self.point_size_slider.value,
+                                                 color=np.log(points[:, 4]),
+                                                 colorscale=self.color_scale.value,
+                                                 line=dict(width=0),
+                                                 opacity=self.opacity_slider.value)
+
+        tick_spacing = calculate_mz_tick_spacing(np.min(points[:, 3]), np.max(points[:, 3]))
+
+        self.points_widget.update_layout(margin=dict(l=0, r=0, b=0, t=0),
+                                         scene={'xaxis': {'title': 'Rt-Index'},
+                                                'yaxis': {'title': 'Mobility-Index'},
+                                                'zaxis': {'title': 'm/z', 'dtick': tick_spacing}},
+                                         template="plotly_white")
