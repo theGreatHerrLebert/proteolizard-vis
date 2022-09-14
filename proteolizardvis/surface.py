@@ -4,6 +4,7 @@ from ipywidgets import widgets
 import numpy as np
 import plotly.express as px
 
+
 class TimsSurfaceVisualizer:
     def __init__(self, data_loader, data_filter):
         self.data_loader = data_loader
