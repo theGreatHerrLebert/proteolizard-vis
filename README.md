@@ -26,5 +26,5 @@ pip install -e .
 
 ## Surface Plots
 
-## Algorithm application
+## Applying algorithms to raw data and visualize results
 
