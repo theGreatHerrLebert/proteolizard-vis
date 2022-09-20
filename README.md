@@ -4,3 +4,27 @@ a collection of python classes and widgets for display of all aquisitions genera
 <p align="center">
   <img src="ProteolizardLogo.png" alt="logo" width="350"/>
 </p>
+
+# Installation
+```
+git clone proteolizard-vis
+cd proteolizard-vis
+pip install -e .
+```
+
+# Data access and filtering
+
+## General concepts
+
+## Visual selection of a slice of data
+
+## Visual filtering of data
+
+# Plotting
+
+## Point clouds
+
+## Surface Plots
+
+## Algorithm application
+
