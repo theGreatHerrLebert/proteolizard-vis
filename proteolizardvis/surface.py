@@ -40,6 +40,12 @@ class TimsSurfaceVisualizer:
         self.surface_box = widgets.HBox(children=[self.surface])
 
         self.widgets = widgets.VBox(children=[self.controls, self.display_button_box, self.surface_box])
+        
+    def display_widgets(self):
+        try:
+            display(self.widgets)
+        except Exception as e:
+            print(e)
 
     def on_display_clicked(self, change):
         sparse_tensor, f_min, f_max, scan_min, scan_max = self.data_filter.filtered_data.vectorize \
