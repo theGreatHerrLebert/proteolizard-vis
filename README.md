@@ -83,3 +83,17 @@ surface_vis.display_widgets()
 
 ## Applying algorithms to raw data and visualize results
 
+```python
+from proteolizardvis.cluster import DBSCANVisualizer
+
+dbscan_vis = DBSCANVisualizer(data=precursor_filter)
+dbscan_vis.display_widget()
+```
+
+<p align="center">
+  <img src="resources/images/dbscan_vis.png" alt="logo" width="1000"/>
+</p>
+
+## Bringing it all together
+
+```python
